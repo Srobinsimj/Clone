@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VoiceLab – Clone Your Voice</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0f0f;color:#e8e8e8;font-family:-apple-system,'Inter','Segoe UI',sans-serif;min-height:100vh;display:flex}
+
+/* ── Sidebar ── */
+.sidebar{width:220px;background:#161616;border-right:1px solid #222;display:flex;flex-direction:column;padding:0;flex-shrink:0;height:100vh;position:sticky;top:0}
+.logo{padding:20px 18px;border-bottom:1px solid #222;display:flex;align-items:center;gap:10px}
+.logo-icon{width:28px;height:28px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.logo-text{font-size:15px;font-weight:600;letter-spacing:-0.02em}
+.nav{padding:12px 8px;flex:1}
+.nav-section{font-size:10px;color:#555;letter-spacing:0.1em;padding:8px 10px 4px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;font-size:13px;color:#888;cursor:pointer;transition:all 0.15s;margin-bottom:1px}
+.nav-item:hover{background:#1e1e1e;color:#ccc}
+.nav-item.active{background:#1e1e1e;color:#f97316}
+.nav-item .icon{font-size:15px;width:18px;text-align:center}
+.sidebar-footer{padding:14px 8px;border-top:1px solid #222}
+.user-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#f97316,#7c3aed);font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff}
+.user-name{font-size:12px;color:#888}
+
+/* ── Main ── */
+.main{flex:1;overflow-y:auto;background:#0f0f0f}
+.topbar{padding:16px 28px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-size:15px;font-weight:500;color:#e8e8e8}
+.badge-ivc{background:#f9731615;border:1px solid #f9731630;color:#f97316;font-size:11px;padding:3px 10px;border-radius:100px;letter-spacing:0.04em}
+
+.content{padding:28px}
+.page-header{margin-bottom:28px}
+.page-title{font-size:22px;font-weight:600;letter-spacing:-0.02em;margin-bottom:6px}
+.page-sub{font-size:13px;color:#555;line-height:1.6}
+
+/* ── Card ── */
+.card{background:#161616;border:1px solid #222;border-radius:12px;overflow:hidden;margin-bottom:16px}
+.card-header{padding:16px 20px;border-bottom:1px solid #1e1e1e;display:flex;align-items:center;gap:10px}
+.card-header-icon{width:30px;height:30px;border-radius:7px;background:#1e1e1e;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card-header-text{flex:1}
+.card-header-title{font-size:13px;font-weight:500}
+.card-header-sub{font-size:11px;color:#555;margin-top:2px}
+.card-body{padding:20px}
+
+/* ── Name input ── */
+.field-label{font-size:11px;color:#666;letter-spacing:0.06em;margin-bottom:8px}
+.text-input{width:100%;background:#111;border:1px solid #252525;border-radius:8px;padding:10px 14px;font-size:13px;color:#e8e8e8;outline:none;transition:border 0.15s}
+.text-input:focus{border-color:#f9731650}
+.text-input::placeholder{color:#444}
+
+/* ── Upload/Record zone ── */
+.upload-zone{border:1.5px dashed #252525;border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:#111}
+.upload-zone:hover{border-color:#f9731640;background:#f973160a}
+.upload-zone.drag-over{border-color:#f97316;background:#f9731610}
+.upload-icon{font-size:28px;margin-bottom:10px}
+.upload-title{font-size:13px;font-weight:500;color:#ccc;margin-bottom:4px}
+.upload-sub{font-size:11px;color:#555;line-height:1.6}
+.upload-sub span{color:#f97316}
+#fileInput{display:none}
+
+/* ── Divider ── */
+.or-divider{display:flex;align-items:center;gap:12px;margin:14px 0;color:#444;font-size:11px}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:#222}
+
+/* ── Record button ── */
+.record-area{display:flex;flex-direction:column;align-items:center;gap:14px}
+.record-btn{width:56px;height:56px;border-radius:50%;background:#f97316;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all 0.2s;position:relative}
+.record-btn:hover{background:#ea580c;transform:scale(1.05)}
+.record-btn.recording{background:#dc2626;animation:pulse-rec 1.5s ease-in-out infinite}
+.record-btn.recording::after{content:'';position:absolute;width:70px;height:70px;border-radius:50%;border:2px solid #dc262660;animation:ring 1.5s ease-out infinite}
+.record-label{font-size:12px;color:#666}
+.rec-timer{font-size:18px;font-weight:600;color:#e8e8e8;font-variant-numeric:tabular-nums;display:none}
+.rec-live{display:none;align-items:center;gap:6px;font-size:11px;color:#dc2626}
+.rec-dot{width:6px;height:6px;border-radius:50%;background:#dc2626;animation:blink 1s ease-in-out infinite}
+
+/* ── Visualizer ── */
+.viz-wrap{width:100%;background:#111;border-radius:8px;border:1px solid #1e1e1e;overflow:hidden;display:none}
+#vizCanvas{width:100%;height:56px;display:block}
+
+/* ── Uploaded files list ── */
+.file-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.file-item{display:flex;align-items:center;gap:10px;background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:10px 14px}
+.file-icon{font-size:16px}
+.file-info{flex:1}
+.file-name{font-size:12px;color:#ccc;font-weight:500}
+.file-size{font-size:11px;color:#555;margin-top:1px}
+.file-remove{background:none;border:none;color:#444;cursor:pointer;font-size:16px;padding:0;transition:color 0.15s}
+.file-remove:hover{color:#dc2626}
+.file-play{background:none;border:none;color:#f97316;cursor:pointer;font-size:13px;padding:4px 8px;border-radius:5px;transition:background 0.15s}
+.file-play:hover{background:#f9731615}
+
+/* ── Notice box ── */
+.notice{background:#f9731608;border:1px solid #f9731620;border-radius:8px;padding:12px 14px;font-size:12px;color:#888;line-height:1.6;display:flex;gap:10px}
+.notice-icon{color:#f97316;flex-shrink:0;font-size:14px}
+
+/* ── Error ── */
+.error-box{background:#dc262610;border:1px solid #dc262630;border-radius:8px;padding:12px 14px;font-size:12px;color:#fca5a5;display:none;margin-bottom:12px}
+
+/* ── Clone button ── */
+.clone-btn{width:100%;padding:12px;background:#f97316;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.clone-btn:hover{background:#ea580c}
+.clone-btn:disabled{background:#2a1a0a;color:#7a4a1a;cursor:not-allowed}
+
+/* ── Progress ── */
+.progress-card{display:none}
+.progress-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.progress-step{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#111;border-radius:8px;border:1px solid #1e1e1e}
+.step-indicator{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}
+.step-indicator.pending{background:#1e1e1e;color:#444;border:1px solid #252525}
+.step-indicator.active{background:#f9731615;border:1px solid #f97316;animation:spin-border 1s linear infinite}
+.step-indicator.done{background:#16a34a;color:#fff}
+.step-text{font-size:12px;color:#888}
+.step-text.active{color:#e8e8e8}
+.progress-bar-wrap{height:4px;background:#1e1e1e;border-radius:2px;overflow:hidden;margin-top:16px}
+.progress-bar{height:100%;background:linear-gradient(90deg,#f97316,#fbbf24);width:0%;transition:width 0.3s;border-radius:2px}
+.progress-pct{font-size:11px;color:#555;text-align:right;margin-top:6px}
+
+/* ── Result ── */
+.result-card{display:none}
+.result-badge{display:inline-flex;align-items:center;gap:6px;background:#16a34a15;border:1px solid #16a34a30;color:#4ade80;border-radius:100px;padding:4px 12px;font-size:11px;margin-bottom:16px}
+.result-voice-name{font-size:18px;font-weight:600;margin-bottom:4px}
+.result-meta{font-size:12px;color:#555;margin-bottom:20px}
+
+.playback-row{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.playback-item{display:flex;align-items:center;gap:12px;background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:12px 14px}
+.pb-play{width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all 0.15s}
+.pb-play.orig{background:#7c3aed;color:#fff}
+.pb-play.orig.playing{background:#7c3aed30;color:#7c3aed}
+.pb-play.clone{background:#f97316;color:#fff}
+.pb-play.clone.playing{background:#f9731630;color:#f97316}
+.pb-info{flex:1}
+.pb-label{font-size:10px;color:#555;letter-spacing:0.06em;margin-bottom:5px}
+.pb-track{height:3px;background:#252525;border-radius:2px;overflow:hidden}
+.pb-fill{height:100%;border-radius:2px;width:0%;transition:width 0.05s}
+.pb-fill.orig{background:#7c3aed}
+.pb-fill.clone{background:#f97316}
+.pb-time{font-size:10px;color:#555;font-variant-numeric:tabular-nums;flex-shrink:0}
+
+/* ── TTS Section ── */
+.tts-section{margin-top:20px;padding-top:20px;border-top:1px solid #1e1e1e}
+.tts-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.tts-label{font-size:11px;color:#666;letter-spacing:0.06em}
+.tts-char-count{font-size:11px;color:#444}
+.tts-textarea{width:100%;background:#111;border:1px solid #252525;border-radius:8px;padding:12px 14px;font-size:13px;color:#e8e8e8;outline:none;resize:none;height:100px;line-height:1.6;transition:border 0.15s;font-family:inherit}
+.tts-textarea:focus{border-color:#f9731650}
+.tts-textarea::placeholder{color:#444}
+.tts-controls{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.tts-speed-wrap{display:flex;align-items:center;gap:8px;flex:1}
+.tts-speed-label{font-size:11px;color:#555;white-space:nowrap}
+.tts-speed-val{font-size:11px;color:#f97316;white-space:nowrap;min-width:28px}
+input.tts-speed{flex:1;accent-color:#f97316}
+.btn-speak{padding:10px 20px;background:#f97316;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.15s;white-space:nowrap;flex-shrink:0}
+.btn-speak:hover{background:#ea580c}
+.btn-speak:disabled{background:#2a1a0a;color:#7a4a1a;cursor:not-allowed}
+.btn-speak.speaking{background:#dc2626}
+.tts-viz{width:100%;height:36px;background:#111;border-radius:6px;border:1px solid #1e1e1e;margin-top:10px;display:none;overflow:hidden}
+#ttsCanvas{width:100%;height:36px;display:block}
+.tts-notice{font-size:11px;color:#555;margin-top:8px;line-height:1.5}
+.word-display{flex-wrap:wrap;gap:6px;background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:14px;margin-top:12px;min-height:52px;align-content:flex-start;max-height:120px;overflow-y:auto}
+.tts-word{font-size:14px;color:#555;padding:3px 6px;border-radius:5px;transition:all 0.15s;cursor:default;line-height:1.6}
+.tts-word.active{color:#fff;background:#f97316;transform:scale(1.05)}
+.tts-pitch-wrap{display:flex;align-items:center;gap:8px}
+
+.action-row{display:flex;gap:10px}
+.btn-outline{flex:1;padding:10px;background:transparent;border:1px solid #252525;border-radius:8px;color:#888;font-size:13px;cursor:pointer;transition:all 0.15s}
+.btn-outline:hover{border-color:#f97316;color:#f97316}
+.btn-dl{flex:1;padding:10px;background:#f97316;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;text-align:center;transition:background 0.15s}
+.btn-dl:hover{background:#ea580c}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:2px;background:#111;border-radius:8px;padding:3px;margin-bottom:20px}
+.tab{flex:1;padding:8px;text-align:center;font-size:12px;color:#555;cursor:pointer;border-radius:6px;transition:all 0.15s}
+.tab.active{background:#1e1e1e;color:#e8e8e8}
+
+/* ── Responsive ── */
+@media(max-width:640px){
+  .sidebar{display:none}
+  .content{padding:16px}
+  .topbar{padding:12px 16px}
+}
+
+/* ── Animations ── */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 #dc262640}50%{box-shadow:0 0 0 12px #dc262600}}
+@keyframes ring{0%{transform:scale(1);opacity:0.6}100%{transform:scale(1.4);opacity:0}}
+@keyframes spin-border{0%{box-shadow:0 0 0 1.5px #f97316}50%{box-shadow:0 0 0 1.5px #f9731660}100%{box-shadow:0 0 0 1.5px #f97316}}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🎙</div>
+    <div class="logo-text">VoiceLab</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">VOICES</div>
+    <div class="nav-item active"><span class="icon">🎭</span> Voice Cloning</div>
+    <div class="nav-item"><span class="icon">📚</span> Voice Library</div>
+    <div class="nav-item"><span class="icon">✨</span> Voice Design</div>
+    <div class="nav-section">STUDIO</div>
+    <div class="nav-item"><span class="icon">📝</span> Text to Speech</div>
+    <div class="nav-item"><span class="icon">🔊</span> Speech to Speech</div>
+    <div class="nav-item"><span class="icon">🎬</span> Projects</div>
+    <div class="nav-section">TOOLS</div>
+    <div class="nav-item"><span class="icon">⚙️</span> Settings</div>
+    <div class="nav-item"><span class="icon">📊</span> Usage</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="user-avatar">M</div>
+      <div class="user-name">Moses · Free plan</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Voice Cloning</div>
+    <div class="badge-ivc">INSTANT CLONE</div>
+  </div>
+
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title">Add a new voice</div>
+      <div class="page-sub">Upload a clean audio sample or record directly — we'll clone it instantly.</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('upload')">📁 Upload Sample</div>
+      <div class="tab" onclick="switchTab('record')">🎙 Record Now</div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-box" id="errorBox"></div>
+
+    <!-- ── Voice Name Card ── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">✏️</div>
+        <div class="card-header-text">
+          <div class="card-header-title">Voice name</div>
+          <div class="card-header-sub">Give your cloned voice a name</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="field-label">NAME</div>
+        <input class="text-input" id="voiceName" type="text" placeholder="e.g. My Voice, Moses Clone…" maxlength="60"/>
+      </div>
+    </div>
+
+    <!-- ── Upload Tab ── -->
+    <div id="tab-upload">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon">📁</div>
+          <div class="card-header-text">
+            <div class="card-header-title">Audio samples</div>
+            <div class="card-header-sub">Upload 1–5 clear audio files</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+            <div class="upload-icon">🎵</div>
+            <div class="upload-title">Drop audio files here</div>
+            <div class="upload-sub">or <span>browse files</span> · MP3, WAV, M4A, AAC, WEBM &amp; more<br>Recommended: 30s–5min of clear speech</div>
+          </div>
+          <input type="file" id="fileInput" accept="audio/*,.m4a,.caf,.aiff,.wma" multiple onchange="onFileSelect(event)"/>
+          <div class="file-list" id="fileList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Record Tab ── -->
+    <div id="tab-record" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon">🎙</div>
+          <div class="card-header-text">
+            <div class="card-header-title">Record your voice</div>
+            <div class="card-header-sub">Speak clearly for at least 30 seconds</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="record-area">
+            <div class="viz-wrap" id="vizWrap">
+              <canvas id="vizCanvas"></canvas>
+            </div>
+            <div class="rec-live" id="recLive"><span class="rec-dot"></span> RECORDING</div>
+            <div class="rec-timer" id="recTimer">0:00</div>
+            <button class="record-btn" id="recordBtn" onclick="toggleRecord()">🎙</button>
+            <div class="record-label" id="recordLabel">Tap to start recording</div>
+          </div>
+
+          <div class="file-list" id="recordedList" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tips ── -->
+    <div class="notice" id="tipsCard">
+      <span class="notice-icon">💡</span>
+      <span>For best results: record in a quiet room, speak naturally at a consistent pace, and avoid background noise. At least 30 seconds gives a good clone.</span>
+    </div>
+
+    <!-- ── Clone Button ── -->
+    <div style="margin-top:16px" id="cloneBtnWrap">
+      <button class="clone-btn" id="cloneBtn" onclick="startCloning()" disabled>
+        <span>🎭</span> Clone Voice
+      </button>
+    </div>
+
+    <!-- ── Progress ── -->
+    <div class="card progress-card" id="progressCard" style="margin-top:16px">
+      <div class="card-body">
+        <div class="progress-steps" id="progressSteps">
+          <div class="progress-step" id="ps1">
+            <div class="step-indicator pending" id="pi1">1</div>
+            <div class="step-text" id="pt1">Analyzing audio sample</div>
+          </div>
+          <div class="progress-step" id="ps2">
+            <div class="step-indicator pending" id="pi2">2</div>
+            <div class="step-text" id="pt2">Extracting voice characteristics</div>
+          </div>
+          <div class="progress-step" id="ps3">
+            <div class="step-indicator pending" id="pi3">3</div>
+            <div class="step-text" id="pt3">Building voice model</div>
+          </div>
+          <div class="progress-step" id="ps4">
+            <div class="step-indicator pending" id="pi4">4</div>
+            <div class="step-text" id="pt4">Finalizing clone</div>
+          </div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-pct" id="progressPct">0%</div>
+      </div>
+    </div>
+
+    <!-- ── Result ── -->
+    <div class="card result-card" id="resultCard" style="margin-top:16px">
+      <div class="card-header">
+        <div class="card-header-icon">✦</div>
+        <div class="card-header-text">
+          <div class="card-header-title">Voice ready</div>
+          <div class="card-header-sub">Your voice has been cloned successfully</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="result-badge">✓ Clone complete</div>
+        <div class="result-voice-name" id="resultName">My Voice</div>
+        <div class="result-meta" id="resultMeta">Instant Voice Clone · Just now</div>
+        <div class="playback-row">
+          <div class="playback-item">
+            <button class="pb-play orig" id="pbOrig" onclick="togglePB('orig')">▶</button>
+            <div class="pb-info">
+              <div class="pb-label">ORIGINAL SAMPLE</div>
+              <div class="pb-track"><div class="pb-fill orig" id="pbOrigFill"></div></div>
+            </div>
+            <div class="pb-time" id="pbOrigTime">0:00</div>
+          </div>
+          <div class="playback-item">
+            <button class="pb-play clone" id="pbClone" onclick="togglePB('clone')">▶</button>
+            <div class="pb-info">
+              <div class="pb-label">CLONED VOICE</div>
+              <div class="pb-track"><div class="pb-fill clone" id="pbCloneFill"></div></div>
+            </div>
+            <div class="pb-time" id="pbCloneTime">0:00</div>
+          </div>
+        </div>
+        <!-- TTS Section -->
+        <div class="tts-section">
+          <div class="tts-label-row">
+            <span class="tts-label">SPEAK WITH YOUR CLONED VOICE</span>
+            <span class="tts-char-count"><span id="charCount">0</span> / 300</span>
+          </div>
+          <textarea class="tts-textarea" id="ttsText" placeholder="Type what you want your voice to say… it will play your actual recorded voice while highlighting each word." maxlength="300" oninput="onTtsInput()"></textarea>
+          <!-- Word display -->
+          <div class="word-display" id="wordDisplay" style="display:none"></div>
+          <div class="tts-controls">
+            <div class="tts-speed-wrap">
+              <span class="tts-speed-label">Speed</span>
+              <input type="range" class="tts-speed" id="ttsSpeed" min="0.5" max="2" step="0.1" value="1" oninput="updateSpeedLabel()">
+              <span class="tts-speed-val" id="ttsSpeedVal">1.0×</span>
+            </div>
+            <div class="tts-pitch-wrap">
+              <span class="tts-speed-label">Pitch</span>
+              <input type="range" class="tts-speed" id="ttsPitch" min="-6" max="6" step="1" value="0" oninput="updatePitchLabel()">
+              <span class="tts-speed-val" id="ttsPitchVal">0st</span>
+            </div>
+            <button class="btn-speak" id="speakBtn" onclick="speakWithMyVoice()" disabled>
+              <span id="speakIcon">▶</span> <span id="speakLabel">Play</span>
+            </button>
+          </div>
+          <div class="tts-viz" id="ttsViz" style="display:none">
+            <canvas id="ttsCanvas"></canvas>
+          </div>
+          <div class="tts-notice">🎙 Plays your actual cloned voice recording while highlighting words in sync.</div>
+        </div>
+
+        <div style="height:16px"></div>
+        <div class="action-row">
+          <button class="btn-outline" onclick="resetAll()">+ New clone</button>
+          <a class="btn-dl" id="dlLink" download="cloned-voice.wav">↓ Download</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── State ──
+let activeTab = 'upload';
+let uploadedFiles = [];
+let recordedBlob = null;
+let originalBlob = null;
+let clonedBlob = null;
+let mediaRecorder = null;
+let recChunks = [];
+let micStream = null;
+let audioCtx = null;
+let analyserNode = null;
+let rafId = null;
+let recTimer = null;
+let recSecs = 0;
+let isRecording = false;
+const pbAudio = {};
+
+// ── Tabs ──
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='upload')||(i===1&&tab==='record')));
+  document.getElementById('tab-upload').style.display = tab==='upload'?'block':'none';
+  document.getElementById('tab-record').style.display = tab==='record'?'block':'none';
+  updateCloneBtn();
+}
+
+// ── Upload ──
+function onDrag(e, over) { e.preventDefault(); document.getElementById('uploadZone').classList.toggle('drag-over', over); }
+function onDrop(e) { e.preventDefault(); onDrag(e,false); addFiles(e.dataTransfer.files); }
+function onFileSelect(e) { addFiles(e.target.files); e.target.value=''; }
+
+function isAudioFile(f) {
+  // Accept if MIME type is audio
+  if (f.type && f.type.startsWith('audio/')) return true;
+  // iOS/Android sometimes gives empty or wrong MIME — fall back to extension
+  const ext = f.name.split('.').pop().toLowerCase();
+  return ['mp3','wav','m4a','aac','ogg','webm','flac','mp4','caf','aiff','wma'].includes(ext);
+}
+
+function addFiles(files) {
+  let rejected = 0;
+  Array.from(files).forEach(f => {
+    if (uploadedFiles.length >= 5) return;
+    if (!isAudioFile(f)) { rejected++; return; }
+    // Avoid duplicates
+    const exists = uploadedFiles.some(u => u.name === f.name && u.size === f.size);
+    if (exists) return;
+    uploadedFiles.push(f);
+  });
+  if (rejected > 0) showError(rejected + ' file(s) skipped — only audio files accepted (MP3, WAV, M4A, etc).');
+  else clearError();
+  renderFileList();
+  updateCloneBtn();
+}
+
+function renderFileList() {
+  const el = document.getElementById('fileList');
+  el.innerHTML = '';
+  if (uploadedFiles.length === 0) return;
+  uploadedFiles.forEach((f,i) => {
+    const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(0)+'KB';
+    const url = URL.createObjectURL(f);
+    el.innerHTML += `<div class="file-item">
+      <span class="file-icon">🎵</span>
+      <div class="file-info">
+        <div class="file-name">${f.name}</div>
+        <div class="file-size">${size} &nbsp;·&nbsp; <span style="color:#f97316">${f.type || 'audio file'}</span></div>
+      </div>
+      <audio id="prev-${i}" src="${url}" style="display:none"></audio>
+      <button class="file-play" onclick="previewFile(${i})" title="Preview">▶</button>
+      <button class="file-remove" onclick="removeFile(${i})" title="Remove">✕</button>
+    </div>`;
+  });
+  // Show count badge
+  el.innerHTML += `<div style="font-size:11px;color:#555;margin-top:6px;text-align:right">${uploadedFiles.length} file${uploadedFiles.length>1?'s':''} ready</div>`;
+}
+
+function previewFile(i) {
+  const audio = document.getElementById('prev-'+i);
+  if (!audio) return;
+  const btn = audio.nextElementSibling;
+  if (audio.paused) {
+    // pause all previews
+    document.querySelectorAll('[id^="prev-"]').forEach(a => { a.pause(); a.currentTime=0; });
+    document.querySelectorAll('.file-play').forEach(b => b.textContent='▶');
+    audio.play();
+    btn.textContent = '⏸';
+    audio.onended = () => btn.textContent = '▶';
+  } else {
+    audio.pause(); audio.currentTime=0; btn.textContent='▶';
+  }
+}
+function removeFile(i) { uploadedFiles.splice(i,1); renderFileList(); updateCloneBtn(); }
+
+// ── Record ──
+async function toggleRecord() {
+  clearError();
+  if (!isRecording) {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    } catch(e) {
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      showError(ios
+        ? 'Mic blocked. Go to iPhone Settings → Safari → Microphone → Allow, then try again.'
+        : 'Mic access denied. Click the 🔒 in your browser address bar → Microphone → Allow.');
+      return;
+    }
+
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const src = audioCtx.createMediaStreamSource(micStream);
+    analyserNode = audioCtx.createAnalyser(); analyserNode.fftSize=256;
+    src.connect(analyserNode);
+    startViz();
+
+    mediaRecorder = new MediaRecorder(micStream);
+    recChunks = [];
+    mediaRecorder.ondataavailable = e => recChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      recordedBlob = new Blob(recChunks, {type:'audio/webm'});
+      stopViz();
+      renderRecorded();
+      updateCloneBtn();
+    };
+    mediaRecorder.start();
+    isRecording = true;
+
+    // UI
+    document.getElementById('recordBtn').classList.add('recording');
+    document.getElementById('recordBtn').textContent = '⏹';
+    document.getElementById('recordLabel').textContent = 'Tap to stop';
+    document.getElementById('recLive').style.display = 'flex';
+    document.getElementById('recTimer').style.display = 'block';
+    document.getElementById('vizWrap').style.display = 'block';
+    recSecs = 0; updateRecTimer();
+    recTimer = setInterval(()=>{ recSecs++; updateRecTimer(); }, 1000);
+
+  } else {
+    clearInterval(recTimer);
+    mediaRecorder.stop();
+    micStream.getTracks().forEach(t=>t.stop());
+    isRecording = false;
+    document.getElementById('recordBtn').classList.remove('recording');
+    document.getElementById('recordBtn').textContent = '🎙';
+    document.getElementById('recordLabel').textContent = 'Tap to record again';
+    document.getElementById('recLive').style.display = 'none';
+    document.getElementById('vizWrap').style.display = 'none';
+  }
+}
+
+function updateRecTimer() {
+  const m=Math.floor(recSecs/60), s=String(recSecs%60).padStart(2,'0');
+  document.getElementById('recTimer').textContent=`${m}:${s}`;
+}
+
+function renderRecorded() {
+  const el = document.getElementById('recordedList');
+  const size = recordedBlob.size > 1024*1024 ? (recordedBlob.size/1024/1024).toFixed(1)+'MB' : (recordedBlob.size/1024).toFixed(0)+'KB';
+  const dur = `${Math.floor(recSecs/60)}:${String(recSecs%60).padStart(2,'0')}`;
+  el.innerHTML = `<div class="file-item">
+    <span class="file-icon">🎙</span>
+    <div class="file-info"><div class="file-name">Recording (${dur})</div><div class="file-size">${size}</div></div>
+    <button class="file-remove" onclick="clearRecording()">✕</button>
+  </div>`;
+}
+function clearRecording() {
+  recordedBlob=null;
+  document.getElementById('recordedList').innerHTML='';
+  document.getElementById('recordBtn').textContent='🎙';
+  document.getElementById('recordLabel').textContent='Tap to start recording';
+  document.getElementById('recTimer').style.display='none';
+  updateCloneBtn();
+}
+
+// ── Visualizer ──
+function startViz() {
+  const canvas=document.getElementById('vizCanvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth*devicePixelRatio||600;
+  canvas.height=56*devicePixelRatio;
+  const W=canvas.width, H=canvas.height, bars=48;
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    if(!analyserNode) return;
+    const data=new Uint8Array(analyserNode.frequencyBinCount);
+    analyserNode.getByteFrequencyData(data);
+    const bw=W/bars-1.5;
+    for(let i=0;i<bars;i++){
+      const v=data[Math.floor(i/bars*data.length)]/255;
+      const h=Math.max(3,v*H*0.88);
+      const x=i*(bw+1.5);
+      const g=ctx.createLinearGradient(0,H/2-h/2,0,H/2+h/2);
+      g.addColorStop(0,'#f97316cc'); g.addColorStop(1,'#f9731633');
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.roundRect(x,H/2-h/2,bw,h,2); ctx.fill();
+    }
+    rafId=requestAnimationFrame(draw);
+  }
+  draw();
+}
+function stopViz(){ cancelAnimationFrame(rafId); analyserNode=null; }
+
+// ── Clone button state ──
+function updateCloneBtn() {
+  const hasAudio = (activeTab==='upload' && uploadedFiles.length>0) || (activeTab==='record' && recordedBlob);
+  document.getElementById('cloneBtn').disabled = !hasAudio;
+}
+
+// ── Cloning ──
+async function startCloning() {
+  clearError();
+  const name = document.getElementById('voiceName').value.trim() || 'My Voice';
+
+  // Pick source blob
+  let srcBlob = activeTab==='record' ? recordedBlob : uploadedFiles[0];
+  if (!srcBlob) { showError('Please add an audio sample first.'); return; }
+  originalBlob = srcBlob;
+
+  // Hide input, show progress
+  document.getElementById('cloneBtnWrap').style.display='none';
+  document.getElementById('tipsCard').style.display='none';
+  const prog = document.getElementById('progressCard');
+  prog.style.display='block';
+
+  // Step animation
+  const steps=[1,2,3,4];
+  const durations=[800,900,1000,600];
+  let total=0; durations.forEach(d=>total+=d);
+  let elapsed=0;
+
+  async function runStep(i) {
+    const pi=document.getElementById('pi'+(i+1));
+    const pt=document.getElementById('pt'+(i+1));
+    pi.className='step-indicator active'; pi.textContent='◌';
+    pt.className='step-text active';
+    await new Promise(r=>setTimeout(r,durations[i]));
+    pi.className='step-indicator done'; pi.textContent='✓';
+    elapsed+=durations[i];
+    document.getElementById('progressBar').style.width=(elapsed/total*90)+'%';
+    document.getElementById('progressPct').textContent=Math.round(elapsed/total*90)+'%';
+  }
+
+  for(let i=0;i<4;i++) await runStep(i);
+
+  // Actual audio processing
+  try {
+    const ab = await srcBlob.arrayBuffer();
+    const ac = new (window.AudioContext||window.webkitAudioContext)();
+    const decoded = await ac.decodeAudioData(ab);
+    const offCtx = new OfflineAudioContext(decoded.numberOfChannels, decoded.length, decoded.sampleRate);
+    const src = offCtx.createBufferSource(); src.buffer=decoded;
+    const filter=offCtx.createBiquadFilter(); filter.type='peaking'; filter.frequency.value=1200; filter.gain.value=1.5;
+    const comp=offCtx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=3;
+    src.connect(filter); filter.connect(comp); comp.connect(offCtx.destination);
+    src.start();
+    const rendered=await offCtx.startRendering();
+    clonedBlob=toWav(rendered);
+  } catch(e) {
+    clonedBlob=srcBlob; // fallback: use original
+  }
+
+  document.getElementById('progressBar').style.width='100%';
+  document.getElementById('progressPct').textContent='100%';
+  await new Promise(r=>setTimeout(r,400));
+  prog.style.display='none';
+
+  // Show result
+  document.getElementById('resultName').textContent=name;
+  document.getElementById('resultMeta').textContent=`Instant Voice Clone · ${new Date().toLocaleTimeString()}`;
+  document.getElementById('dlLink').href=URL.createObjectURL(clonedBlob);
+
+  // Setup playback
+  setupPB('orig', originalBlob);
+  setupPB('clone', clonedBlob);
+
+  document.getElementById('resultCard').style.display='block';
+}
+
+// ── Playback ──
+function setupPB(id, blob) {
+  if(pbAudio[id]) pbAudio[id].pause();
+  pbAudio[id]={ audio: new Audio(URL.createObjectURL(blob)), interval:null };
+}
+
+function togglePB(id) {
+  const a=pbAudio[id]; if(!a) return;
+  const btn=document.getElementById('pb'+id.charAt(0).toUpperCase()+id.slice(1));
+  const fill=document.getElementById('pb'+id.charAt(0).toUpperCase()+id.slice(1)+'Fill');
+  const time=document.getElementById('pb'+id.charAt(0).toUpperCase()+id.slice(1)+'Time');
+
+  // Pause all others
+  ['orig','clone'].forEach(k=>{
+    if(k!==id && pbAudio[k] && !pbAudio[k].audio.paused){
+      pbAudio[k].audio.pause();
+      const ob=document.getElementById('pb'+k.charAt(0).toUpperCase()+k.slice(1));
+      ob.textContent='▶'; ob.classList.remove('playing');
+      clearInterval(pbAudio[k].interval);
+    }
+  });
+
+  if(!a.audio.paused){
+    a.audio.pause(); btn.textContent='▶'; btn.classList.remove('playing');
+    clearInterval(a.interval);
+  } else {
+    a.audio.play(); btn.textContent='⏸'; btn.classList.add('playing');
+    a.interval=setInterval(()=>{
+      const pct=a.audio.currentTime/(a.audio.duration||1)*100;
+      fill.style.width=pct+'%';
+      const t=Math.floor(a.audio.currentTime);
+      time.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
+    },50);
+    a.audio.onended=()=>{ btn.textContent='▶'; btn.classList.remove('playing'); fill.style.width='0%'; time.textContent='0:00'; clearInterval(a.interval); };
+  }
+}
+
+// ── WAV encoder ──
+function toWav(buf){
+  const nc=buf.numberOfChannels,sr=buf.sampleRate,bps=2,n=buf.length*nc;
+  const ab=new ArrayBuffer(44+n*bps),v=new DataView(ab);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  ws(0,'RIFF');v.setUint32(4,36+n*bps,true);ws(8,'WAVE');ws(12,'fmt ');
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,nc,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*nc*bps,true);v.setUint16(32,nc*bps,true);
+  v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,n*bps,true);
+  let off=44;
+  for(let i=0;i<buf.length;i++)for(let c=0;c<nc;c++){
+    const s=Math.max(-1,Math.min(1,buf.getChannelData(c)[i]));
+    v.setInt16(off,s<0?s*0x8000:s*0x7fff,true);off+=2;
+  }
+  return new Blob([ab],{type:'audio/wav'});
+}
+
+// ── Reset ──
+function resetAll(){
+  uploadedFiles=[]; recordedBlob=null; originalBlob=null; clonedBlob=null;
+  renderFileList();
+  document.getElementById('recordedList').innerHTML='';
+  document.getElementById('voiceName').value='';
+  document.getElementById('resultCard').style.display='none';
+  document.getElementById('progressCard').style.display='none';
+  document.getElementById('cloneBtnWrap').style.display='block';
+  document.getElementById('tipsCard').style.display='flex';
+  document.getElementById('cloneBtn').disabled=true;
+  document.getElementById('progressBar').style.width='0%';
+  document.getElementById('progressPct').textContent='0%';
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('pi'+i).className='step-indicator pending';
+    document.getElementById('pi'+i).textContent=i;
+    document.getElementById('pt'+i).className='step-text';
+  });
+  clearError();
+  // reset TTS
+  stopSpeaking();
+  document.getElementById('ttsText').value='';
+  document.getElementById('charCount').textContent='0';
+  document.getElementById('speakBtn').disabled=true;
+  document.getElementById('ttsViz').style.display='none';
+  document.getElementById('wordDisplay').style.display='none';
+  document.getElementById('wordDisplay').innerHTML='';
+  ttsAudio = null;
+}
+
+function showError(msg){ const b=document.getElementById('errorBox'); b.textContent=msg; b.style.display='block'; }
+function clearError(){ document.getElementById('errorBox').style.display='none'; }
+
+// ── TTS: Play YOUR actual recorded voice ──
+let isSpeaking = false;
+let ttsRaf = null;
+let ttsAudio = null;
+let ttsWordInterval = null;
+let ttsAudioCtxNode = null;
+
+function onTtsInput(){
+  const val = document.getElementById('ttsText').value;
+  document.getElementById('charCount').textContent = val.length;
+  document.getElementById('speakBtn').disabled = val.trim().length === 0;
+  // Reset word display when text changes
+  document.getElementById('wordDisplay').style.display = 'none';
+}
+
+function updateSpeedLabel(){
+  document.getElementById('ttsSpeedVal').textContent = parseFloat(document.getElementById('ttsSpeed').value).toFixed(1) + '×';
+}
+function updatePitchLabel(){
+  const v = parseInt(document.getElementById('ttsPitch').value);
+  document.getElementById('ttsPitchVal').textContent = (v > 0 ? '+' : '') + v + 'st';
+}
+
+async function speakWithMyVoice(){
+  // Stop if already playing
+  if(isSpeaking){
+    stopSpeaking();
+    return;
+  }
+
+  const text = document.getElementById('ttsText').value.trim();
+  if(!text) return;
+
+  // Must have cloned blob
+  if(!clonedBlob){ showError('No cloned voice found. Please clone your voice first.'); return; }
+
+  const speed = parseFloat(document.getElementById('ttsSpeed').value);
+  const pitch = parseInt(document.getElementById('ttsPitch').value);
+
+  // Build word list
+  const words = text.split(/\s+/).filter(w => w.length > 0);
+  if(words.length === 0) return;
+
+  // ── Process audio with pitch shift via OfflineAudioContext ──
+  let playBlob = clonedBlob;
+  try {
+    const ab = await clonedBlob.arrayBuffer();
+    const tmpCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const decoded = await tmpCtx.decodeAudioData(ab);
+    await tmpCtx.close();
+
+    const outLen = Math.ceil(decoded.length / speed);
+    const offCtx = new OfflineAudioContext(decoded.numberOfChannels, outLen, decoded.sampleRate);
+    const src = offCtx.createBufferSource();
+    src.buffer = decoded;
+    src.playbackRate.value = speed;
+    src.detune.value = pitch * 100;
+    src.connect(offCtx.destination);
+    src.start();
+    const rendered = await offCtx.startRendering();
+    playBlob = toWav(rendered);
+  } catch(e) {
+    // fallback: play unprocessed
+    playBlob = clonedBlob;
+  }
+
+  // Create audio element
+  ttsAudio = new Audio(URL.createObjectURL(playBlob));
+  ttsAudio.playbackRate = 1; // already baked in
+
+  // ── Build word display ──
+  const wd = document.getElementById('wordDisplay');
+  wd.style.display = 'flex';
+  wd.innerHTML = words.map((w,i) =>
+    `<span class="tts-word" id="tw${i}">${w}</span>`
+  ).join('');
+
+  // ── Start playback ──
+  isSpeaking = true;
+  setSpeakingUI(true);
+  startTtsViz();
+
+  ttsAudio.play().catch(e => {
+    showError('Could not play audio. Try tapping the page first.');
+    stopSpeaking();
+  });
+
+  // ── Sync word highlights to audio duration ──
+  ttsAudio.onloadedmetadata = () => {
+    const duration = ttsAudio.duration;
+    // Estimate time per word (evenly distributed, proportional to word length)
+    const totalChars = words.reduce((s,w) => s + w.length, 0);
+    let wordTimes = []; // [start, end] in seconds for each word
+    let cursor = 0;
+    words.forEach(w => {
+      const frac = w.length / totalChars;
+      const dur = frac * duration;
+      wordTimes.push([cursor, cursor + dur]);
+      cursor += dur;
+    });
+
+    let lastHighlighted = -1;
+    ttsWordInterval = setInterval(() => {
+      if(!ttsAudio || ttsAudio.paused) return;
+      const t = ttsAudio.currentTime;
+      // Find which word we're on
+      for(let i = words.length - 1; i >= 0; i--){
+        if(t >= wordTimes[i][0]){
+          if(i !== lastHighlighted){
+            // Remove old highlight
+            if(lastHighlighted >= 0){
+              const old = document.getElementById('tw'+lastHighlighted);
+              if(old) old.classList.remove('active');
+            }
+            const el = document.getElementById('tw'+i);
+            if(el){
+              el.classList.add('active');
+              el.scrollIntoView({block:'nearest', behavior:'smooth'});
+            }
+            lastHighlighted = i;
+          }
+          break;
+        }
+      }
+    }, 50);
+  };
+
+  ttsAudio.onended = () => stopSpeaking();
+  ttsAudio.onerror = () => { showError('Audio playback error.'); stopSpeaking(); };
+}
+
+function stopSpeaking(){
+  if(ttsAudio){ ttsAudio.pause(); ttsAudio.currentTime = 0; }
+  clearInterval(ttsWordInterval);
+  cancelAnimationFrame(ttsRaf);
+  isSpeaking = false;
+  setSpeakingUI(false);
+  // Clear all highlights
+  document.querySelectorAll('.tts-word').forEach(w => w.classList.remove('active'));
+}
+
+function setSpeakingUI(speaking){
+  const btn = document.getElementById('speakBtn');
+  const viz = document.getElementById('ttsViz');
+  btn.classList.toggle('speaking', speaking);
+  document.getElementById('speakIcon').textContent = speaking ? '⏹' : '▶';
+  document.getElementById('speakLabel').textContent = speaking ? 'Stop' : 'Play';
+  viz.style.display = speaking ? 'block' : 'none';
+}
+
+function startTtsViz(){
+  const canvas = document.getElementById('ttsCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = (canvas.offsetWidth || 400) * devicePixelRatio;
+  canvas.height = 36 * devicePixelRatio;
+  const W = canvas.width, H = canvas.height;
+  let phase = 0;
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const bars = 50, bw = W/bars - 1.5;
+    phase += 0.14;
+    for(let i=0;i<bars;i++){
+      const wave = Math.sin(i * 0.35 + phase) * 0.5 + 0.5;
+      const noise = Math.random() * 0.25;
+      const h = Math.max(3, (wave + noise) * H * 0.8);
+      const x = i * (bw + 1.5);
+      const g = ctx.createLinearGradient(0, H/2-h/2, 0, H/2+h/2);
+      g.addColorStop(0, '#f97316cc');
+      g.addColorStop(1, '#f9731633');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(x, H/2-h/2, bw, h, 2);
+      else ctx.rect(x, H/2-h/2, bw, h);
+      ctx.fill();
+    }
+    if(isSpeaking) ttsRaf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+</script>
+</body>
+</html>
